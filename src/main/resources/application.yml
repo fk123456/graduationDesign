@@ -1,0 +1,29 @@
+spring:
+  datasource:
+        type: com.alibaba.druid.pool.DruidDataSource
+        url: jdbc:mysql://localhost:3306/designback?useUnicode=true&characterEncoding=utf-8&useSSL=false
+        username: root
+        password: fangke555
+        driver-class-name: com.mysql.jdbc.Driver
+        initialSize: 5
+        minIdle: 1
+        maxActive: 20
+        maxWait: 5000
+        filters: stat,wall
+        poolPreparedStatements: true
+        maxPoolPreparedStatementPerConnectionSize: 20
+  mvc:
+    view:
+      prefix: /WEB-INF/jsp/
+      suffix: .jsp
+  #redis:
+    #host: localhost
+    #port: 6379
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: true
+  mapper-locations: classpath*:/mapper/*.xml
+  type-aliases-package: com.fangke.domain
+server:
+  port: 8085

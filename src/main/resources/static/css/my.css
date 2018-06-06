@@ -1,0 +1,57 @@
+#tab th {
+    height: 20px;
+}
+
+body, table {
+    font-size: 12px;
+}
+
+table {
+    table-layout: fixed;
+    empty-cells: show;
+    border-collapse: collapse;
+    margin: 0 auto;
+}
+
+td {
+    height: 30px;
+}
+
+h1, h2, h3 {
+    font-size: 12px;
+    margin: 0;
+    padding: 0;
+}
+
+.table {
+    border: 1px solid #cad9ea;
+    color: #666;
+    margin-top: 20px;
+    clear: both;
+    margin-bottom: 20px;
+}
+
+.table th {
+    background-repeat: repeat-x;
+    height: 30px;
+}
+
+.table td, .table th {
+    border: 1px solid #cad9ea;
+    padding: 0 1em 0;
+}
+
+.table tr.alter {
+    background-color: #f5fafe;
+}
+
+#add {
+    display: block;
+    margin-bottom: 10px;
+    float: right;
+}
+
+#selectDeviceId {
+    display: block;
+    float: right;
+}

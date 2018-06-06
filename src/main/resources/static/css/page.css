@@ -1,0 +1,62 @@
+.page {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.page .page-no {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.page .page-no a, .page .page-no span {
+    float: left;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    line-height: 30px;
+    background: #fff;
+    border: solid 1px #ccc;
+    color: #333;
+    margin-right: 5px;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.page .page-no .current {
+    background: #3B8AFF;
+    color: #fff;
+    border: solid 1px #3B8AFF;
+}
+
+.page .page-no .disable.prev, .page .page-no .disable.next {
+    background: #fff;
+    color: #ccc;
+    border: 1px solid #ccc;
+}
+
+.page .form-control {
+    display: inline;
+    width: 40px;
+    height: 30px;
+    margin: 0 5px;
+    padding: 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    border: 1px solid #ccc;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.page .page-confirm {
+    background: #3B8AFF;
+    padding: 0 10px;
+    height: 30px;
+    line-height: 30px;
+    color: #fff;
+    display: inline-block;
+    border-radius: 4px;
+}
+
+.page .page-confirm:link {
+    text-decoration: none;
+}

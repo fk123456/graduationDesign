@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fangke.mapper.OrderMapper">
+    <!--分页查询订单-->
+    <select id="findByOrder" resultType="com.fangke.domain.Order">
+        SELECT id,
+        user_id,
+        order_no,
+        order_status,
+        message,
+        recipients,
+        mobile,
+        good_name,
+        create_date,
+        good_id,
+        update_date
+        FROM t_order
+        WHERE user_id=#{userId}
+    </select>
+
+    <!--更新订单-->
+    <update id="updateByOrder" parameterType="com.fangke.domain.Order">
+        UPDATE t_order SET
+        <if test="message!=null and message!=''">message=#{message},</if>
+        <if test="recipients!=null and recipients!=''">recipients=#{recipients},</if>
+        <if test="mobile!=null and mobile!=''">mobile=#{mobile},</if>
+        update_date=NOW()
+        WHERE id=#{id}
+    </update>
+
+    <!--删除订单-->
+    <delete id="deleteById" parameterType="java.lang.Long">
+        DELETE FROM t_order
+        WHERE id=#{id}
+    </delete>
+
+    <select id="getBook" parameterType="String" resultType="com.fangke.domain.OrderState">
+        SELECT id,device_id,appoint_time,book FROM t_order_class
+        WHERE device_id=#{deviceId} AND appoint_time=#{appointTime} AND (delete_id=0 or delete_id=-1) AND
+        day_time=#{daytime}
+    </select>
+    <select id="getBookByTwo" parameterType="String" resultType="com.fangke.domain.OrderState">
+        SELECT id,device_id,classroom_id,one,two,three,four,appoint_time,book FROM t_orderState
+        WHERE device_id=#{deviceId} AND appoint_time=#{appointTime} and two!=0 AND state=0
+    </select>
+    <select id="getBookByThree" parameterType="String" resultType="com.fangke.domain.OrderState">
+        SELECT id,device_id,classroom_id,one,two,three,four,appoint_time,book FROM t_orderState
+        WHERE device_id=#{deviceId} AND appoint_time=#{appointTime} and three!=0 AND state=0
+    </select>
+    <select id="getBookByFour" parameterType="String" resultType="com.fangke.domain.OrderState">
+        SELECT id,device_id,classroom_id,one,two,three,four,appoint_time,book FROM t_orderState
+        WHERE device_id=#{deviceId} AND appoint_time=#{appointTime} and four!=0 AND state=0
+    </select>
+
+    <select id="loadClass" parameterType="String" resultType="com.fangke.domain.OrderState">
+        SELECT * FROM t_choose_class WHERE appoint_time=#{appointTime} and device_id=#{deviceId} AND delete_id=0 ORDER
+        BY day_time ASC
+    </select>
+
+    <select id="loadBook" parameterType="String" resultType="com.fangke.domain.OrderState">
+        SELECT * FROM t_order_class WHERE appoint_time=#{appointTime} AND device_id=#{deviceId} AND (delete_id=0 OR
+        delete_id=-1) AND day_time=#{classNo}
+    </select>
+
+    <select id="getClassroomNo" parameterType="String" resultType="com.fangke.domain.Classroom">
+        SELECT id,classroom_no FROM t_classroom
+    </select>
+
+
+    <insert id="appointment" parameterType="com.fangke.domain.OrderState" useGeneratedKeys="true"
+            keyProperty="orderState.id">
+        INSERT INTO t_order_class(
+        device_id,
+        appoint_time,
+        book,
+        user_id,
+        delete_id,
+        authority,
+        day_time)
+        VALUES
+        (
+        #{orderState.deviceId},
+        #{orderState.appointTime},
+        #{orderState.book},
+        #{orderState.userId},
+        #{orderState.deleteId}, #{orderState.authority},
+        #{orderState.dayTime}
+        )
+    </insert>
+
+
+    <update id="cancelAppoint" parameterType="String">
+        UPDATE t_orderstate SET state=1 WHERE id=#{orderId}
+    </update>
+
+
+    <select id="getOrderList" resultType="com.fangke.domain.Base">
+        SELECT
+        t_order_class.id AS id,
+        t_order_class.`appoint_time` AS appointTime,
+        t_order_class.`book`,
+        t_order_class.`delete_id` AS deleteId,
+        t_order_class.`day_time` AS daytime,
+        t_device.total AS total,
+        t_device.id AS deviceId,
+        t_device.`device_name` AS deviceName,
+        t_category_device.`classroom_no` AS classroom
+        FROM
+        t_order_class,t_device,t_category_device WHERE t_order_class.`device_id`=t_device.`id` AND
+        t_category_device.`device_id`=t_device.`id`
+        AND user_id =#{userId} AND authority=#{authority} order by t_order_class.id desc
+    </select>
+
+    <!--学生订单列表-->
+    <select id="getOrderListByStu" resultType="com.fangke.domain.Base">
+        SELECT
+        t_orderstate.id AS id,
+        t_device.total as total,
+        t_device.id as deviceId,
+        t_device.device_name AS deviceName,
+        t_classroom.classroom_no AS classroom,
+        t_orderstate.appoint_time AS appointTime,
+        t_orderstate.`one`,
+        t_orderstate.`two`,
+        t_orderstate.`three`,
+        t_orderstate.`four`,
+        t_orderstate.`book`,
+        t_orderstate.`state`
+        FROM
+        t_orderstate,
+        t_device,
+        t_classroom
+        WHERE t_orderstate.`device_id`=t_device.`id` AND user_id =#{userId}
+    </select>
+
+    <update id="updateBook" parameterType="com.fangke.domain.Base">
+        UPDATE t_order_class SET book=#{book} , delete_id=#{deleteId} where id=#{id}
+    </update>
+
+    <update id="updateState" parameterType="com.fangke.domain.Base">
+        UPDATE t_order_class SET delete_id=#{deleteId} where id=#{id}
+    </update>
+
+</mapper>

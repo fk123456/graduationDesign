@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fangke.mapper.DeviceMapper">
+
+    <!--分页查询设备-->
+    <select id="findByDevice" resultType="com.fangke.domain.Device">
+        SELECT t_device.id,
+        t_device.device_name,
+        t_device.description,
+        t_device.appointment,
+        t_device.create_date,
+        t_device.last_update_date,
+        t_device.visit_total,
+        t_device.device_no,
+        t_device.main_image_url,
+        t_device.status,
+        t_device.rich_content,
+        t_device.total
+        FROM t_category_device, t_device
+        WHERE t_category_device.category_id=#{categoryId} AND t_category_device.device_id=t_device.id
+    </select>
+
+    <!--模糊查询-->
+    <select id="findBySearchKey" resultType="com.fangke.domain.Device">
+        SELECT device.id,
+        device.category_id,
+        device.device_name,
+        device.description,
+        device.appointment,
+        device.visit_total,
+        device.device_no,
+        device.main_image_url,
+        device.status,
+        device.rich_content,
+        tcatd.category_id As tcatd_category_id
+        FROM t_device device
+        LEFT JOIN t_category_device tcatd ON tcatd.device_id=device.id
+        LEFT JOIN t_category tcat ON tcat.id=tcatd.category_id
+        WHERE device.status='NORMAL'
+        <if test="searchKey!=null and searchKey!=''">AND CONCAT_WS('',device_name,description) LIKE #{searchKey}</if>
+    </select>
+
+    <!--类目列表-->
+    <select id="find" resultType="com.fangke.domain.Category">
+        SELECT * from t_category WHERE status=#{status} AND id=#{loginCategoryId}
+    </select>
+
+    <!--预约-->
+    <insert id="appointment" parameterType="com.fangke.domain.Order">
+        INSERT INTO t_order(
+        id,
+        user_id,
+        order_status,
+        message,
+        device_name,
+        create_date,
+        device_id,
+        update_date
+        )
+        VALUES
+        (
+        #{id},
+        #{userId},
+        'APPOINTMENT',
+        #{message},
+        #{deviceName},
+        NOW(),
+        #(deviceId),
+        NOW()
+        )
+    </insert>
+
+    <!--查询设备详情-->
+    <select id="findByDetail" resultType="com.fangke.domain.Device">
+        SELECT * FROM t_device ,t_category_device WHERE t_device.`id` =t_category_device.`device_id` AND
+        t_device.id=#{id}
+    </select>
+    <update id="changeVisiTotal">
+        UPDATE t_device SET visit_total=#{visitTotal} where id=#{id}
+    </update>
+    <select id="findMallImgByDID" resultType="com.fangke.domain.MallImg">
+        SELECT * FROM t_mall_img WHERE TYPE=0 AND device_id=#{deviceId}
+    </select>
+    <select id="getVisitTotal" resultType="com.fangke.domain.Device">
+        SELECT main_image_url,
+        t_device.id,t_device.`visit_total`,t_device.`device_name`,t_category.category_name,t_category.`id` as categoryId
+        FROM t_device ,t_category_device,t_category WHERE t_device.`id`=t_category_device.device_id AND
+        t_category_device.category_id=t_category.id AND t_category.id=#{loginCategoryId} ORDER BY t_device.visit_total
+        DESC LIMIT 4
+    </select>
+
+    <select id="getDevice" resultType="com.fangke.domain.Device">
+        SELECT t_device.id AS id,t_device.`device_name` AS deviceName,t_device.`total` AS total
+        ,t_category_device.`category_id` AS categoryId,t_category.`category_name` as cateName FROM t_device
+        ,t_category_device ,t_category WHERE t_device.id=t_category_device.`device_id` AND
+        t_category.`id`=t_category_device.`category_id` AND t_category_device.`category_id`=#{categoryId}
+    </select>
+    <select id="getDeviceByName" resultType="com.fangke.domain.Device">
+        SELECT t_device.id AS id,t_device.`device_name` AS deviceName,t_device.`total` AS total
+        ,t_category_device.`category_id` AS categoryId,t_category.`category_name` as cateName FROM t_device
+        ,t_category_device ,t_category WHERE t_device.id=t_category_device.`device_id` AND
+        t_category.`id`=t_category_device.`category_id` AND t_category_device.`category_id`=#{categoryId} and
+        device_name=#{deviceName}
+    </select>
+
+
+    <select id="getOrder" resultType="com.fangke.domain.Base">
+        SELECT
+        t_order_class.book AS book,
+        t_order_class.`id` AS id ,
+        t_device.`device_name` AS deviceName,
+        t_order_class.`appoint_time` AS appointTime,
+        t_order_class.`day_time`,
+        t_order_class.delete_id AS deleteId,
+        t_student_info.`certificate_id` AS certificateId,
+        t_student_info.id AS userId ,
+        t_student_info.`name` AS userName,
+        t_student_info.`email` AS email ,
+        t_student_info.`sex` AS sex,
+        t_student_info.`mobile` AS phone,
+        t_student_info.`theclass` AS theClass,
+        t_student_info.`grade` AS grade,
+        t_category.`category_name` AS cateName,
+        t_order_class.`authority`,
+        t_category_device.`classroom_no` as classroom
+
+        FROM t_order_class,t_device ,t_student_info,t_category_device ,t_category WHERE
+        t_order_class.`device_id`=t_device.`id` AND
+        t_category_device.`device_id`=t_device.`id` AND
+        t_category_device.`category_id`=t_category.`id` AND
+        t_order_class.`user_id`=t_student_info.`id` AND
+        t_category.`id`=#{categoryId} AND t_order_class.`device_id`=#{deviceId} and t_order_class.`authority`=3
+        order by t_order_class.`id` desc
+    </select>
+
+    <select id="getAdminOrder" resultType="com.fangke.domain.Base">
+        SELECT
+        t_order_class.book AS book,
+        t_order_class.`id` AS id ,
+        t_device.`device_name` AS deviceName,
+        t_order_class.`appoint_time` AS appointTime,
+        t_order_class.`day_time`,
+        t_order_class.delete_id AS deleteId,
+        t_lab_teacher_manager.name AS NAME,
+        t_lab_teacher_manager.title AS title ,
+        t_lab_teacher_manager.`office` AS office,
+        t_category.`category_name` AS cateName,
+        t_order_class.`authority`,
+        t_category_device.`classroom_no` AS classroom
+
+        FROM t_order_class,t_device ,t_lab_teacher_manager,t_category_device ,t_category WHERE
+        t_order_class.`device_id`=t_device.`id` AND
+        t_category_device.`device_id`=t_device.`id` AND
+        t_category_device.`category_id`=t_category.`id` AND
+        t_order_class.`user_id`=t_lab_teacher_manager.`id` AND
+        t_category.`id`=#{categoryId} AND t_order_class.`device_id`=#{deviceId} AND t_order_class.`authority`!=3
+        ORDER BY t_order_class.`id` DESC
+    </select>
+    <select id="getOtherDevice" resultType="com.fangke.domain.Device">
+        SELECT main_image_url,
+        t_device.id,t_device.`visit_total`,t_device.`device_name`,t_category.category_name,t_category.`id` as categoryId
+        FROM t_device ,t_category_device,t_category WHERE t_device.`id`=t_category_device.device_id AND
+        t_category_device.category_id=t_category.id AND t_category_device.`category_id`=#{categoryId} and
+        t_device.id!=#{deviceId} limit 3
+    </select>
+
+    <select id="search" resultType="com.fangke.domain.Device">
+        SELECT t_device.*,t_category_device.category_id,t_category.category_name as cateName FROM
+        t_device,t_category_device,t_category WHERE t_category.id=t_category_device.category_id and
+        t_category_device.`device_id`=t_device.id AND device_name LIKE #{deviceName}
+    </select>
+
+
+    <select id="getDeviceList" resultType="com.fangke.domain.Device">
+        SELECT * FROM t_device ,t_category_device WHERE t_category_device.`device_id`=t_device.`id` AND
+        category_id=#{loginCategoryId}
+    </select>
+</mapper>

@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fangke.mapper.UserMapper">
+
+    <!--判断昵称是否存在-->
+    <select id="findByNickName" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM t_user WHERE status='NORMAL' AND nick_name=#{nickName}
+    </select>
+
+    <!--判断手机号是否存在-->
+    <select id="findByCertificateId" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM t_student_info
+        WHERE certificate_id=#{certificateId}
+        AND card_id=#{cardId} and mobile=#{mobile} and name=#{name} AND status=#{status}
+    </select>
+
+    <!--注册-->
+    <!--<insert id="register" parameterType="com.fangke.domain.User">-->
+    <!--INSERT INTO t_student_info(-->
+    <!--name,-->
+    <!--certificate_id,-->
+    <!--password,-->
+    <!--mobile-->
+    <!--) VALUES (-->
+    <!--#{name},-->
+    <!--#{certificateId},-->
+    <!--#{password},-->
+    <!--#{mobile}-->
+    <!--)-->
+    <!--</insert>-->
+    <!--<update id="register" parameterType="com.fangke.domain.User">-->
+    <!--UPDATE t_student_info set-->
+    <!--<if test="name!=null and name!=''">name=#{name},</if>-->
+    <!--<if test="certificateId!=null and certificateId!=''">certificate_id=#{certificateId},</if>-->
+    <!--<if test="password!=null and password!=''">password=#{password},</if>-->
+    <!--<if test="mobile!=null and mobile!=''">mobile=#{mobile}</if>-->
+    <!--</update>-->
+    <update id="register" parameterType="com.fangke.domain.User">
+        UPDATE t_student_info SET password=#{password} ,status='NORMAL' WHERE certificate_id=#{certificateId}
+    </update>
+
+
+    <!--注册判断身份证后六位-->
+    <select id="findByCardId" resultType="com.fangke.domain.User">
+        select * FROM t_student_info where card_id=#{cardId}
+    </select>
+    <!--学生登录-->
+    <select id="stuLogin" resultType="com.fangke.domain.User">
+        SELECT * FROM t_student_info WHERE certificate_id=#{mobile} AND status='NORMAL' AND password=#{password}
+    </select>
+    <select id="manageLogin" resultType="com.fangke.domain.User">
+        SELECT * FROM t_lab_teacher_manager WHERE authority=#{authority} AND STATUS='NORMAL' AND account=#{account} AND
+        PASSWORD=#{password}
+    </select>
+    <!--修改个人信息-->
+    <update id="modifyUserInfo" parameterType="com.fangke.domain.User">
+        UPDATE t_user SET
+        <if test="name!=null and name!=''">name=#{name},</if>
+        <if test="mobile!=null and mobile!=''">mobile=#{mobile},</if>
+        <if test="password!=null and password!=''">password=#{password},</if>
+        <if test="email!=null and email!=''">email=#{email},</if>
+        <if test="address!=null and address!=''">address=#{address},</if>
+        <if test="headPicture!=null and headPicture!=''">head_picture=#{headPicture},</if>
+        <if test="nickName!=null and nickName!=''">nick_name=#{nickName},</if>
+        update_date=NOW()
+        WHERE id=#{id}
+    </update>
+
+    <select id="getUserInfo" resultType="com.fangke.domain.User">
+        SELECT * FROM t_student_info as stu left join t_category as cate ON stu.category_id = cate.id WHERE
+        category_id=#{categoryId}
+    </select>
+
+    <!--改变老师和管理员的状态-->
+    <update id="changeUserStatus" parameterType="com.fangke.domain.User">
+        UPDATE t_lab_teacher_manager SET status=#{status} where id=#{userId}
+    </update>
+
+    <select id="getMessage" resultType="com.fangke.domain.Base">
+        SELECT t_orderstate.one as one,t_orderstate.two as two ,t_orderstate.three as three,t_orderstate.four as four,
+        t_message.`message_type` as messageType, t_user.`name` as userName, t_classroom.`classroom_no` as classroom,
+        t_device.device_name AS deviceName,t_orderstate.`appoint_time` as appointTime ,t_orderstate.`book` as book
+        ,t_message.`create_time` as createTime
+        FROM t_message LEFT JOIN t_orderstate ON (t_message.`orderstate_id`=t_orderstate.`id`) left JOIN t_device ON
+        (t_orderstate.`device_id`=t_device.id) left JOIN t_user ON (t_user.`id`=t_message.`user_id`) left JOIN
+        t_classroom ON( t_classroom.`id`=t_orderstate.`classroom_id`)
+        AND t_orderstate.user_id=#{userId} ORDER BY create_time DESC
+    </select>
+
+    <insert id="message" parameterType="com.fangke.domain.message">
+        INSERT INTO t_message VALUE(#{userId},#{messageType},#{createTime},#{isread},#{orderstateId})
+    </insert>
+
+    <select id="getIsRead" resultType="com.fangke.domain.message">
+        SELECT * FROM t_message WHERE user_id=#{userId} AND isread=1
+    </select>
+
+
+    <update id="changeIsRead" parameterType="com.fangke.domain.message">
+        UPDATE t_message SET isread=0 WHERE user_Id=#{userId}
+    </update>
+
+    <!--系统管理员添加用户-->
+    <insert id="addUser" parameterType="com.fangke.domain.User">
+        INSERT into t_lab_teacher_manager VALUE
+        (#{id},#{account},#{password},#{authority},#{status},#{categoryId},#{name},#{title},#{office})
+    </insert>
+
+    <!--获得所有实验室管理员和老师列表-->
+    <select id="getAllUser" resultType="com.fangke.domain.User">
+        select * FROM t_lab_teacher_manager as lab left join t_category as cate ON lab.category_id = cate.id WHERE
+        lab.`authority`!='2'
+    </select>
+
+    <!--改变学生的状态-->
+    <update id="changeUserStateOnStudent" parameterType="com.fangke.domain.User">
+        UPDATE t_student_info SET status=#{status} where id=#{userId}
+    </update>
+
+    <!--获得所有订单(按星期显示)-->
+    <select id="getAllOrderByClass" resultType="com.fangke.domain.Base">
+        SELECT b.name,c.`classroom_no`,d.`device_name`,a.`day_time`,a.book,a.`appoint_time` AS
+        appointTime,c.`category_id` ,a.`device_id`
+        FROM t_choose_class a,t_lab_teacher_manager b,t_category_device c,t_device d
+        WHERE a.`device_id` = c.`device_id` AND a.`user_id` = b.`id` AND d.id=a.`device_id`
+        AND a.appoint_time=#{str} AND c.`category_id`=#{categoryId} AND a.`device_id`=#{deviceId}
+    </select>
+    <select id="getOrderClassByStu" resultType="com.fangke.domain.Base">
+
+        SELECT
+        t_student_info.name,
+        t_order_class.`device_id` ,
+        t_order_class.book,
+        t_category_device.`classroom_no`,
+        t_device.`device_name`,
+        t_order_class.`day_time`,
+        t_order_class.`appoint_time` AS appointTime,
+        t_category_device.`category_id`
+        FROM t_order_class,t_student_info,t_category_device,t_device
+        WHERE t_order_class.`device_id` = t_category_device.`device_id`
+        AND t_order_class.`user_id` = t_student_info.`id`
+        AND t_device.id=t_order_class.`device_id`
+        AND t_order_class.appoint_time=#{str}
+        AND t_category_device.`category_id`=#{categoryId}
+        AND t_order_class.`device_id`=#{deviceId}
+        AND t_order_class.`authority`=3 and t_order_class.delete_id=0
+    </select>
+    <select id="getOrderClassByAdmin" resultType="com.fangke.domain.Base">
+        SELECT
+        t_lab_teacher_manager.name,
+        t_order_class.`device_id` ,
+        t_order_class.book,
+        t_category_device.`classroom_no`,
+        t_device.`device_name`,
+        t_order_class.`day_time`,
+        t_order_class.`appoint_time` AS appointTime,
+        t_category_device.`category_id`
+        FROM t_order_class,t_lab_teacher_manager,t_category_device,t_device
+        WHERE t_order_class.`device_id` = t_category_device.`device_id`
+        AND t_order_class.`user_id` = t_lab_teacher_manager.`id`
+        AND t_device.id=t_order_class.`device_id`
+        AND t_order_class.appoint_time=#{str}
+        AND t_category_device.`category_id`=#{categoryId}
+        AND t_order_class.`device_id`=#{deviceId}
+        AND t_order_class.`authority`=0
+    </select>
+    <select id="getTeacherClass" resultType="com.fangke.domain.Base">
+        SELECT b.name,c.`classroom_no`,d.`device_name`,a.`day_time`,a.book,a.`appoint_time` AS
+        appointTime,c.`category_id` ,a.`device_id`
+        FROM t_choose_class a,t_lab_teacher_manager b,t_category_device c,t_device d
+        WHERE a.`device_id` = c.`device_id` AND a.`user_id` = b.`id` AND d.id=a.`device_id`
+        AND a.appoint_time=#{str} AND a.`user_id`=#{userId}
+    </select>
+
+    <select id="getStuClass" resultType="com.fangke.domain.Base">
+        SELECT
+        t_lab_teacher_manager.name,
+        t_choose_class.`device_id` ,
+        t_choose_class.book,
+        t_category_device.`classroom_no`,
+        t_device.`device_name`,
+        t_choose_class.`day_time`,
+        t_choose_class.`appoint_time` AS appointTime,
+        t_category_device.`category_id`
+        FROM t_stu_class ,t_choose_class,t_student_info ,t_category_device,t_device,t_lab_teacher_manager
+        WHERE
+        t_stu_class.`choose_id`=t_choose_class.`id` AND t_category_device.`device_id`=t_choose_class.`device_id`
+        AND t_choose_class.`user_id`=t_lab_teacher_manager.`id`
+        AND t_device.`id`=t_choose_class.`device_id`
+        AND t_stu_class.`stu_id`=t_student_info.`id` and t_choose_class.appoint_time=#{str} AND
+        t_student_info.`id`=#{userId}
+    </select>
+
+    <select id="getStuOrder" resultType="com.fangke.domain.Base">
+        SELECT * FROM t_order_class,t_student_info,t_category_device,t_device
+        WHERE t_order_class.`user_id` = t_student_info.`id` AND
+        t_device.id=t_order_class.`device_id` AND
+        t_order_class.`device_id` = t_category_device.`device_id` AND
+        t_order_class.`user_id`=#{userId} and t_order_class.appoint_time=#{str} AND authority=3 and
+        t_order_class.delete_id=0
+    </select>
+    <!--获得所有预约订单(按星期显示)-->
+    <select id="getAllOrderByAppoint" resultType="com.fangke.domain.Base">
+        select * from t_order_class as a left join t_student_info as b on a.user_id = b.id
+    </select>
+
+    <!--根据设备id来查所有预约的设备-->
+    <select id="getAllByDeviceId" resultType="com.fangke.domain.Base">
+        SELECT a.device_name,a.id FROM t_device a,t_category_device b WHERE a.id=b.`device_id` AND
+        b.category_id=#{categoryId}
+    </select>
+</mapper>
